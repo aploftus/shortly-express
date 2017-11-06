@@ -19,12 +19,12 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.get('/', 
 (req, res) => {
-  res.render('index');
+  res.render('login');
 });
 
-app.get('/create', 
+app.get('/signup', 
 (req, res) => {
-  res.render('index');
+  res.render('signup');
 });
 
 app.get('/links', 
@@ -78,7 +78,26 @@ app.post('/links',
 // Write your authentication routes here
 /************************************************************/
 
+app.post('/signup',
+(req, res, next) => {
+  // res.location('/signup');
+  // check if user already exists, send error message if so
+  // if (users.get({username: req.body.username})) {
+    
+  // } else {
+  // if (err) {
+  //   console.log(err);
+  // } else {
+  models.Users.create(req.body);
+    // .catch((err) => {
+    //   console.log('caught the error!');
+    // });
+  res.redirect('/');
+    
+  // }
+  // }
 
+});
 
 /************************************************************/
 // Handle the code parameter route last - if all other routes fail
