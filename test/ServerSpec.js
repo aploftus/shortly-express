@@ -39,8 +39,8 @@ describe('', function() {
     /* TODO: Update user and password if different than on your local machine            */
     /*************************************************************************************/
     db = mysql.createConnection({
-      user: 'janet',
-      password: 'HelloKitty',
+      user: 'student',
+      password: 'student',
       database: 'shortly'
     });
 
@@ -61,7 +61,7 @@ describe('', function() {
     afterEach(function() { server.close(); });
   });
 
-  describe('Database Schema:', function() {
+  xdescribe('Database Schema:', function() {
     it('contains a users table', function(done) {
       var queryString = 'SELECT * FROM users';
       db.query(queryString, function(err, results) {
@@ -123,7 +123,7 @@ describe('', function() {
     });
   });
 
-  describe('Account Creation:', function() {
+  xdescribe('Account Creation:', function() {
 
     it('signup creates a new user record', function(done) {
       var options = {
@@ -208,7 +208,7 @@ describe('', function() {
     });
   });
 
-  describe('Account Login:', function() {
+  xdescribe('Account Login:', function() {
 
     beforeEach(function(done) {
       var options = {
@@ -407,7 +407,7 @@ describe('', function() {
           var secondResponse = httpMocks.createResponse();
           var requestWithCookies = httpMocks.createRequest();
           requestWithCookies.cookies.shortlyid = cookie;
-
+          
           createSession(requestWithCookies, secondResponse, function() {
             var session = requestWithCookies.session;
             expect(session).to.be.an('object');
