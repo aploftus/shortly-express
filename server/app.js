@@ -19,7 +19,7 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 app.get('/', 
 (req, res) => {
-  res.render('login');
+  res.render('index');
 });
 
 app.get('/signup', 
@@ -27,6 +27,8 @@ app.get('/signup',
   res.render('signup');
 });
 
+
+// TODO: check for a cookie/authenticated session before serving up the links page
 app.get('/links', 
 (req, res, next) => {
   models.Links.getAll()
@@ -92,16 +94,13 @@ app.post('/signup',
 
 app.post('/login',
 (req, res, next) => {
-  // console.log(req.body.username);
   models.Users.find(req.body)
     .then(({password, salt}) => {
-      // console.log('Users table results: ', results);
       if (models.Users.compare(req.body.password, password, salt)) {
         console.log('Checked the user and the password is good');
         res.redirect('/');
       } else {
         console.log('Checked the user and the password is bad');
-        // redirect to login
         res.redirect('/login');
       }      
     })
