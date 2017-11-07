@@ -89,6 +89,30 @@ app.post('/signup',
     });
 });
 
+
+app.post('/login',
+(req, res, next) => {
+  // console.log(req.body.username);
+  models.Users.find(req.body)
+    .then(({password, salt}) => {
+      // console.log('Users table results: ', results);
+      if (models.Users.compare(req.body.password, password, salt)) {
+        console.log('Checked the user and the password is good');
+        res.redirect('/');
+      } else {
+        console.log('Checked the user and the password is bad');
+        // redirect to login
+        res.redirect('/login');
+      }      
+    })
+    .catch((err) => {
+      console.log('Checked the user and the user does not exist');
+      res.redirect('/login');
+    });
+
+});
+
+
 /************************************************************/
 // Handle the code parameter route last - if all other routes fail
 // assume the route is a short code and try and handle it here.

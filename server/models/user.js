@@ -1,5 +1,10 @@
-const utils = require('../lib/hashUtils');
+const db = require('../db');
 const Model = require('./model');
+const utils = require('../lib/hashUtils');
+
+const executeQuery = (query, values) => {
+  return db.queryAsync(query, values).spread(results => results);
+};
 
 /**
  * Users is a class with methods to interact with the users table, which
@@ -44,6 +49,12 @@ class Users extends Model {
 
     return super.create.call(this, newUser);
   }
+  
+  find({username}) {
+    var sql = `SELECT password, salt FROM users WHERE username="${username}";`;
+    return db.queryAsync(sql).spread(results => results[0]);
+  } 
+    
 }
 
 module.exports = new Users();
