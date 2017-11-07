@@ -80,23 +80,13 @@ app.post('/links',
 
 app.post('/signup',
 (req, res, next) => {
-  // res.location('/signup');
-  // check if user already exists, send error message if so
-  // if (users.get({username: req.body.username})) {
-    
-  // } else {
-  // if (err) {
-  //   console.log(err);
-  // } else {
-  models.Users.create(req.body);
-    // .catch((err) => {
-    //   console.log('caught the error!');
-    // });
-  res.redirect('/');
-    
-  // }
-  // }
-
+  models.Users.create(req.body)
+    .then(() => { 
+      res.redirect('/'); 
+    })
+    .catch((err) => {
+      res.redirect('/signup');
+    });
 });
 
 /************************************************************/
