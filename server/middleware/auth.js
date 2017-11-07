@@ -9,7 +9,14 @@ module.exports.createSession = (req, res, next) => {
       .then((session) => {
         if (session) {
           req.session = session;
-          res.cookies = {'shortlyid': {value: session.hash}};          
+          res.cookies = {'shortlyid': {value: session.hash}};
+          res.cookie('value', session.hash);
+          res.set('Set-Cookie', `shortlyid=${session.hash}`);
+          // res._jar
+          console.log('request');
+          console.dir(req);
+          console.log('res HEADERS');
+          console.dir(res._headers);
           next();
         } else {
           models.Sessions.create()
@@ -18,6 +25,8 @@ module.exports.createSession = (req, res, next) => {
           .then((session) => {
             req.session = session;
             res.cookies = {'shortlyid': {value: session.hash}};
+            res.cookie('value', session.hash);
+            // res.set('Set-Cookie', `shortlyid=${session.hash}`);
             next();
           });          
         }
@@ -33,6 +42,8 @@ module.exports.createSession = (req, res, next) => {
       .then((session) => {
         req.session = session;
         res.cookies = {'shortlyid': {value: session.hash}};
+        res.cookie('value', session.hash);
+        // res.set('Set-Cookie', `shortlyid=${session.hash}`); 
         next();
       });
   }
