@@ -3,8 +3,10 @@ const path = require('path');
 const utils = require('./lib/hashUtils');
 const partials = require('express-partials');
 const bodyParser = require('body-parser');
-const Auth = require('./middleware/auth');
 const models = require('./models');
+
+const Auth = require('./middleware/auth');
+const parseCookies = require('./middleware/cookieParser.js');
 
 const app = express();
 
@@ -25,6 +27,11 @@ app.get('/',
 app.get('/signup', 
 (req, res) => {
   res.render('signup');
+});
+
+app.get('/login', 
+(req, res) => {
+  res.render('login');
 });
 
 
@@ -91,25 +98,33 @@ app.post('/signup',
     });
 });
 
-
 app.post('/login',
 (req, res, next) => {
   models.Users.find(req.body)
-    .then(({password, salt}) => {
+    .then(({id, password, salt}) => {
       if (models.Users.compare(req.body.password, password, salt)) {
+        req.userId = id;
         console.log('Checked the user and the password is good');
-        res.redirect('/');
+        next();
+        // res.redirect('/');
       } else {
         console.log('Checked the user and the password is bad');
         res.redirect('/login');
       }      
     })
+    // .then((req, res, next) => { parseCookies(req, res, next); } )
     .catch((err) => {
       console.log('Checked the user and the user does not exist');
       res.redirect('/login');
     });
-
 });
+
+// cookie parser
+
+app.use(parseCookies);
+app.use(() => console.log('Outside parseCookies: ', req.shortlyCookie));
+// // createSession
+app.use(Auth.createSession);
 
 
 /************************************************************/

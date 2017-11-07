@@ -51,7 +51,7 @@ class Users extends Model {
   }
   
   find({username}) {
-    var sql = `SELECT password, salt FROM users WHERE username="${username}";`;
+    var sql = `SELECT id, password, salt FROM users WHERE username="${username}";`;
     return db.queryAsync(sql).spread(results => results[0]);
   } 
     
