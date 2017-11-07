@@ -15,28 +15,34 @@ app.set('view engine', 'ejs');
 app.use(partials());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(parseCookies);
+app.use(Auth.createSession);
 app.use(express.static(path.join(__dirname, '../public')));
 
 
-
-app.get('/', 
+app.get('/',
 (req, res) => {
   res.render('index');
 });
 
-app.get('/signup', 
+app.get('/create',
+(req, res) => {
+  res.render('index');
+});
+
+app.get('/signup',
 (req, res) => {
   res.render('signup');
 });
 
-app.get('/login', 
+app.get('/login',
 (req, res) => {
   res.render('login');
 });
 
 
 // TODO: check for a cookie/authenticated session before serving up the links page
-app.get('/links', 
+app.get('/links',
 (req, res, next) => {
   models.Links.getAll()
     .then(links => {
@@ -47,7 +53,7 @@ app.get('/links',
     });
 });
 
-app.post('/links', 
+app.post('/links',
 (req, res, next) => {
   var url = req.body.url;
   if (!models.Links.isValidUrl(url)) {
@@ -90,27 +96,27 @@ app.post('/links',
 app.post('/signup',
 (req, res, next) => {
   models.Users.create(req.body)
-    .then(() => { 
-      res.redirect('/'); 
+    .then(() => {
+      res.redirect('/');
     })
-    .catch((err) => {
+    .catch(() => {
       res.redirect('/signup');
     });
 });
 
 app.post('/login',
 (req, res, next) => {
-  models.Users.find(req.body)
+  models.Users.findByUsername(req.body)
     .then(({id, password, salt}) => {
       if (models.Users.compare(req.body.password, password, salt)) {
         req.userId = id;
         console.log('Checked the user and the password is good');
-        next();
-        // res.redirect('/');
+        res.redirect('/');
+        // next();
       } else {
         console.log('Checked the user and the password is bad');
         res.redirect('/login');
-      }      
+      }
     })
     // .then((req, res, next) => { parseCookies(req, res, next); } )
     .catch((err) => {
@@ -118,13 +124,6 @@ app.post('/login',
       res.redirect('/login');
     });
 });
-
-// cookie parser
-
-app.use(parseCookies);
-app.use(() => console.log('Outside parseCookies: ', req.shortlyCookie));
-// // createSession
-app.use(Auth.createSession);
 
 
 /************************************************************/

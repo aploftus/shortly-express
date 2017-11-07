@@ -39,8 +39,8 @@ describe('', function() {
     /* TODO: Update user and password if different than on your local machine            */
     /*************************************************************************************/
     db = mysql.createConnection({
-      user: 'student',
-      password: 'student',
+      user: 'janet',
+      password: 'HelloKitty',
       database: 'shortly'
     });
 
@@ -225,7 +225,7 @@ describe('', function() {
       });
     });
 
-    xit('Logs in existing users', function(done) {
+    it('Logs in existing users', function(done) {
       var options = {
         'method': 'POST',
         'uri': 'http://127.0.0.1:4568/login',
@@ -480,7 +480,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Sessions and cookies', function() {
+  describe('Sessions and cookies', function() {
     var requestWithSession;
     var cookieJar;
 
