@@ -106,7 +106,7 @@ app.post('/signup',
 
 app.post('/login',
 (req, res, next) => {
-  models.Users.find(req.body)
+  models.Users.findByUsername(req.body)
     .then(({id, password, salt}) => {
       if (models.Users.compare(req.body.password, password, salt)) {
         req.userId = id;
