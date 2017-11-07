@@ -2,39 +2,33 @@ var cookieParser = require('./cookieParser.js');
 const models = require('../models');
 const Promise = require('bluebird');
 
+// createSession(requestWithoutCookies, response, function() {
+//   var session = requestWithoutCookies.session;
+//   expect(session).to.exist;
+//   expect(session).to.be.an('object');
+//   expect(session.hash).to.exist;
+
 module.exports.createSession = (req, res, next) => {
-  var cookies = req.cookies;
-  // console.log('cookie inside createSEssion: ', cookie);
-  var userId = req.userId;
-  
-  if (cookies.shortlyid) {
+  if (req.header.cookie === undefined) {
+    models.Sessions.create()
+      // .then((session) => console.log('INSERT ID: ',  session.insertId))
+      .then(({insertId}) => models.Sessions.get({id: insertId})
+        )
+      .then((session) => {
+        req.session = session;
+        res.cookies = {'shortlyid': session.hash};  //cookies['shortlyid']
+        next();
+      });
+  } else if (cookies.shortlyid) {
     models.Sessions.get({hash: cookies.shortlyid})
       .then((session) => {
         req.session = session;
-        console.log('returnting session: ', session);
-        res.redirect('/');
+        next();
       })
-      .catch((err) => { // if the get fails we need to catch the error
+      .catch((err) => {
         console.log(err);
       });
-      
-  } else {
-    // no cookie, create a cookie with hashUtils.
-    models.Sessions.create()
-      .then((hash) => {
-        req.session = hash; 
-        // How does this have the user ID to insert the session??
-        // set response headers to return this cookie
-        res.headers = {cookie: hash};     
-        // redirect to /
-        res.redirect('/');
-      });
   }
-
-// if cookie is on the req, we make a session.
-
-// Is the next just showing a page of links?
-
 };
 
 /************************************************************/
