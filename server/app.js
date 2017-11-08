@@ -1,5 +1,5 @@
-const express = require('express');
 const path = require('path');
+const express = require('express');
 const utils = require('./lib/hashUtils');
 const partials = require('express-partials');
 const bodyParser = require('body-parser');
@@ -111,17 +111,30 @@ app.post('/login',
       if (models.Users.compare(req.body.password, password, salt)) {
         req.userId = id;
         console.log('Checked the user and the password is good');
-        res.redirect('/');
-        // next();
+        // do we look for a session record with her userId.
+        // give her back a cookie with the existing hash
+        var hash = req.cookies.shortlyId.value;
+        
+        db.query('UPDATE sessions SET userId = ? WHERE hash = ?', [userId, hash], function(error, result) {
+          error && console.log(error);
+          console.log(result);
+          res.redirect('/');
+        });
+        
+          // next();
       } else {
         console.log('Checked the user and the password is bad');
         res.redirect('/login');
       }
     })
-    // .then((req, res, next) => { parseCookies(req, res, next); } )
     .catch((err) => {
       console.log('Checked the user and the user does not exist');
-      res.redirect('/login');
+      if (req.cookies) {
+        res.redirect('/');
+      } else {
+        res.redirect('/login');      
+      }
+
     });
 });
 
