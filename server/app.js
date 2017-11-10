@@ -4,9 +4,7 @@ const utils = require('./lib/hashUtils');
 const partials = require('express-partials');
 const bodyParser = require('body-parser');
 const models = require('./models');
-
 const Auth = require('./middleware/auth');
-const parseCookies = require('./middleware/cookieParser.js');
 
 const app = express();
 
@@ -15,35 +13,21 @@ app.set('view engine', 'ejs');
 app.use(partials());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(parseCookies);
-app.use(Auth.createSession);
 app.use(express.static(path.join(__dirname, '../public')));
 
+app.use(require('./middleware/cookieParser.js'));
+app.use(Auth.createSession);
 
-app.get('/',
-(req, res) => {
+app.get('/', (req, res) => {
   res.render('index');
 });
 
-app.get('/create',
-(req, res) => {
+// good opportunity to verify session upon site load
+app.get('/create', (req, res) => {
   res.render('index');
 });
 
-app.get('/signup',
-(req, res) => {
-  res.render('signup');
-});
-
-app.get('/login',
-(req, res) => {
-  res.render('login');
-});
-
-
-// TODO: check for a cookie/authenticated session before serving up the links page
-app.get('/links',
-(req, res, next) => {
+app.get('/links', (req, res, next) => {
   models.Links.getAll()
     .then(links => {
       res.status(200).send(links);
@@ -53,8 +37,7 @@ app.get('/links',
     });
 });
 
-app.post('/links',
-(req, res, next) => {
+app.post('/links', (req, res, next) => {
   var url = req.body.url;
   if (!models.Links.isValidUrl(url)) {
     // send back a 404 if link is not valid
@@ -93,51 +76,54 @@ app.post('/links',
 // Write your authentication routes here
 /************************************************************/
 
-app.post('/signup',
-(req, res, next) => {
-  models.Users.create(req.body)
-    .then(() => {
+app.get('/signup', (req, res) => {
+  res.render('signup');
+});
+
+app.post('/signup', (req, res, next) => {
+  let username = req.body.username;
+  let password = req.body.password;
+
+  models.Users.get({username})
+    .then(user => {
+      if (user) {
+        throw user;
+      }
+      return models.Users.create({username, password});
+    })
+    .then(results => {
+      return models.Sessions.update({hash: req.session.hash}, {userId: results.insertId});
+    })
+    .then(user => {
       res.redirect('/');
     })
-    .catch(() => {
+    .catch(user => {
       res.redirect('/signup');
     });
 });
 
-app.post('/login',
-(req, res, next) => {
-  models.Users.findByUsername(req.body)
-    .then(({id, password, salt}) => {
-      if (models.Users.compare(req.body.password, password, salt)) {
-        req.userId = id;
-        console.log('Checked the user and the password is good');
-        // do we look for a session record with her userId.
-        // give her back a cookie with the existing hash
-        var hash = req.cookies.shortlyId.value;
-        
-        db.query('UPDATE sessions SET userId = ? WHERE hash = ?', [userId, hash], function(error, result) {
-          error && console.log(error);
-          console.log(result);
-          res.redirect('/');
-        });
-        
-          // next();
-      } else {
-        console.log('Checked the user and the password is bad');
-        res.redirect('/login');
-      }
-    })
-    .catch((err) => {
-      console.log('Checked the user and the user does not exist');
-      if (req.cookies) {
-        res.redirect('/');
-      } else {
-        res.redirect('/login');      
-      }
-
-    });
+app.get('/login', (req, res) => {
+  res.render('login');
 });
 
+app.post('/login', (req, res, next) => {
+  let username = req.body.username;
+  let password = req.body.password;
+
+  models.Users.get({username})
+    .then(user => {
+      if (!user || models.User.compare(password, user.password, user.salt)) {
+        throw user;
+      }
+      return models.Sessions.update({id: req.session.id}, {userId: user.id});
+    })
+    .then (() => {
+      res.redirect('/');
+    })
+    .catch(user => {
+      res.redirect('/login');
+    });
+});
 
 /************************************************************/
 // Handle the code parameter route last - if all other routes fail
