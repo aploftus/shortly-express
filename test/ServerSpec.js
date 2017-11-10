@@ -9,7 +9,7 @@ var port = 4568;
 
 /************************************************************/
 // Mocha doesn't have a way to designate pending before blocks.
-// Mimic the behavior of it and describe with xbeforeEach.
+// Mimic the behavior of xit and xdescribe with xbeforeEach.
 // Remove the 'x' from beforeEach block when working on
 // authentication tests.
 /************************************************************/
@@ -123,7 +123,7 @@ describe('', function() {
     });
   });
 
-  describe('Account Creation:', function() {
+  xdescribe('Account Creation:', function() {
 
     it('signup creates a new user record', function(done) {
       var options = {
@@ -208,7 +208,7 @@ describe('', function() {
     });
   });
 
-  describe('Account Login:', function() {
+  xdescribe('Account Login:', function() {
 
     beforeEach(function(done) {
       var options = {
@@ -225,7 +225,7 @@ describe('', function() {
       });
     });
 
-    xit('Logs in existing users', function(done) {
+    it('Logs in existing users', function(done) {
       var options = {
         'method': 'POST',
         'uri': 'http://127.0.0.1:4568/login',
@@ -242,7 +242,7 @@ describe('', function() {
       });
     });
 
-    xit('Users that do not exist are kept on login page', function(done) {
+    it('Users that do not exist are kept on login page', function(done) {
       var options = {
         'method': 'POST',
         'uri': 'http://127.0.0.1:4568/login',
@@ -277,7 +277,7 @@ describe('', function() {
     });
   });
 
-  describe('Sessions Schema:', function() {
+  xdescribe('Sessions Schema:', function() {
     it('contains a sessions table', function(done) {
       var queryString = 'SELECT * FROM sessions';
       db.query(queryString, function(err, results) {
@@ -325,7 +325,7 @@ describe('', function() {
     });
   });
 
-  describe('Express Middleware', function() {
+  xdescribe('Express Middleware', function() {
     var cookieParser = require('../server/middleware/cookieParser.js');
     var createSession = require('../server/middleware/auth.js').createSession;
 
@@ -407,7 +407,7 @@ describe('', function() {
           var secondResponse = httpMocks.createResponse();
           var requestWithCookies = httpMocks.createRequest();
           requestWithCookies.cookies.shortlyid = cookie;
-          
+
           createSession(requestWithCookies, secondResponse, function() {
             var session = requestWithCookies.session;
             expect(session).to.be.an('object');
@@ -480,7 +480,7 @@ describe('', function() {
     });
   });
 
-  describe('Sessions and cookies', function() {
+  xdescribe('Sessions and cookies', function() {
     var requestWithSession;
     var cookieJar;
 
@@ -530,29 +530,15 @@ describe('', function() {
       addUser(function(err, res, body) {
         if (err) { return done(err); }
         var cookies = cookieJar.getCookies('http://127.0.0.1:4568/');
-        console.log('HERE IS OUR COOKIEs');
-        console.dir(cookies);
         var cookieValue = cookies[0].value;
-        console.log('cookie value: ', cookieValue);
-        // show the users table to confirm it is there
 
         var queryString = `
           SELECT users.username FROM users, sessions
           WHERE sessions.hash = ? AND users.id = sessions.userId
         `;
-        
-        db.query('select * from users;', (err, results) => {
-          err && console.log(err);
-          console.log('our users: ', results);
-        });
-        db.query('select * from sessions;', (err, results) => {
-          err && console.log(err);
-          console.log('our sessions: ', results);
-        });
 
         db.query(queryString, cookieValue, function(error, users) {
           if (error) { return done(error); }
-          console.log('users:', users);
           var user = users[0];
           expect(user.username).to.equal('Vivian');
           done();
@@ -584,7 +570,7 @@ describe('', function() {
     });
   });
 
-  describe('Privileged Access:', function() {
+  xdescribe('Privileged Access:', function() {
 
     it('Redirects to login page if a user tries to access the main page and is not signed in', function(done) {
       request('http://127.0.0.1:4568/', function(error, res, body) {
@@ -611,7 +597,7 @@ describe('', function() {
     });
   });
 
-  describe('Link creation:', function() {
+  xdescribe('Link creation:', function() {
 
     var cookies = request.jar();
     var requestWithSession = request.defaults({ jar: cookies });
