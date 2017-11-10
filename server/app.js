@@ -1,10 +1,10 @@
-const path = require('path');
 const express = require('express');
+const path = require('path');
 const utils = require('./lib/hashUtils');
 const partials = require('express-partials');
 const bodyParser = require('body-parser');
-const models = require('./models');
 const Auth = require('./middleware/auth');
+const models = require('./models');
 
 const app = express();
 
@@ -15,19 +15,18 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 
-app.use(require('./middleware/cookieParser.js'));
+app.use(require('./middleware/cookieParser'));
 app.use(Auth.createSession);
 
-app.get('/', (req, res) => {
+app.get('/', Auth.verifySession, (req, res) => {
   res.render('index');
 });
 
-// good opportunity to verify session upon site load
-app.get('/create', (req, res) => {
+app.get('/create', Auth.verifySession, (req, res) => {
   res.render('index');
 });
 
-app.get('/links', (req, res, next) => {
+app.get('/links', Auth.verifySession, (req, res, next) => {
   models.Links.getAll()
     .then(links => {
       res.status(200).send(links);
@@ -37,7 +36,7 @@ app.get('/links', (req, res, next) => {
     });
 });
 
-app.post('/links', (req, res, next) => {
+app.post('/links', Auth.verifySession, (req, res, next) => {
   var url = req.body.url;
   if (!models.Links.isValidUrl(url)) {
     // send back a 404 if link is not valid
@@ -87,15 +86,19 @@ app.post('/signup', (req, res, next) => {
   models.Users.get({username})
     .then(user => {
       if (user) {
+        // user already exists
         throw user;
       }
-      return models.Users.create({username, password});
+      return models.Users.create({ username, password });
     })
     .then(results => {
-      return models.Sessions.update({hash: req.session.hash}, {userId: results.insertId});
+      return models.Sessions.update({ hash: req.session.hash }, { userId: results.insertId });
     })
     .then(user => {
       res.redirect('/');
+    })
+    .error(error => {
+      res.status(500).send(error);
     })
     .catch(user => {
       res.redirect('/signup');
@@ -113,6 +116,7 @@ app.post('/login', (req, res, next) => {
   models.Users.get({username})
     .then(user => {
       if (!user || models.User.compare(password, user.password, user.salt)) {
+        // user doesn't exist, or they entered incorrect password
         throw user;
       }
       return models.Sessions.update({id: req.session.id}, {userId: user.id});
@@ -120,8 +124,23 @@ app.post('/login', (req, res, next) => {
     .then (() => {
       res.redirect('/');
     })
+    .error(error => {
+      res.status(500).send(error);
+    })
     .catch(user => {
       res.redirect('/login');
+    });
+});
+
+app.get('/logout', (req, res, next) => {
+
+  return models.Sessions.delete({ hash: req.cookies.shortlyid })
+    .then(() => {
+      res.clearCookie('shortlyid');
+      res.redirect('/login');
+    })
+    .error(error => {
+      res.status(500).send(error);
     });
 });
 

@@ -1,26 +1,25 @@
-const db = require('../db');
-var cookieParser = require('./cookieParser.js');
 const models = require('../models');
 const Promise = require('bluebird');
 
 module.exports.createSession = (req, res, next) => {
-
-  return Promise.resolve(req.cookies.shortlyid)
+  
+  Promise.resolve(req.cookies.shortlyid)
     .then(hash => {
       if (!hash) {
         throw hash;
       }
-      return models.Sessions.get({hash: hash});
+      return models.Sessions.get({ hash });
     })
     .tap(session => {
       if (!session) {
         throw session;
       }
     })
-    .catch(session => {
+    // initializes a new session
+    .catch(() => {
       return models.Sessions.create()
         .then(results => {
-          return models.Sessions.get({id: results.insertId});
+          return models.Sessions.get({ id: results.insertId });
         })
         .tap(session => {
           res.cookie('shortlyid', session.hash);
@@ -30,4 +29,12 @@ module.exports.createSession = (req, res, next) => {
       req.session = session;
       next();
     });
+};
+
+module.exports.verifySession = (req, res, next) => {
+  if (!models.Sessions.isLoggedIn(req.session)) {
+    res.redirect('/login');
+  } else {
+    next();
+  }
 };
